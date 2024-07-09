@@ -1,0 +1,87 @@
+[
+    {
+        "id": 1,
+        "title": "Annual Coding Competition",
+        "body": "Participate in our annual coding competition and win exciting prizes.",
+        "category": "Competitions",
+        "labels": {
+            "Payment": "Free",
+            "Competition Type": "Programming",
+            "Event Type": "Online"
+        },
+        "link": "https://codingcompetition.com",
+        "linkedin": "https://linkedin.com/company/coding-competition",
+        "deadline": "2024-08-01",
+        "location": "San Francisco, CA",
+        "email": "info@codingcompetition.com",
+        "phone": "(234) 567-8901"
+    },
+    {
+        "id": 2,
+        "title": "Business Plan Competition",
+        "body": "Showcase your business ideas in our annual business plan competition.",
+        "category": "Competitions",
+        "labels": {
+            "Payment": "Paid",
+            "Competition Type": "Business Plan",
+            "Event Type": "Offline"
+        },
+        "link": "https://businessplancompetition.com",
+        "linkedin": "https://linkedin.com/company/business-plan-competition",
+        "deadline": "2024-07-10",
+        "location": "Houston, TX",
+        "email": "info@businessplancompetition.com",
+        "phone": "(789) 012-3456"
+    },
+    {
+        "id": 3,
+        "title": "Robotics Competition",
+        "body": "Participate in the robotics competition and showcase your innovation.",
+        "category": "Competitions",
+        "labels": {
+            "Payment": "Paid",
+            "Competition Type": "Robotics",
+            "Event Type": "Hybrid"
+        },
+        "link": "https://roboticscompetition.com",
+        "linkedin": "https://linkedin.com/company/robotics-competition",
+        "deadline": "2024-08-20",
+        "location": "Austin, TX",
+        "email": "info@roboticscompetition.com",
+        "phone": "(901) 234-5678"
+    },
+    {
+        "id": 4,
+        "title": "Startup Innovation Challenge",
+        "body": "Showcase your startup ideas in our innovation challenge.",
+        "category": "Competitions",
+        "labels": {
+            "Payment": "Paid",
+            "Competition Type": "Business Plan",
+            "Event Type": "Hybrid"
+        },
+        "link": "https://startupinnovationchallenge.com",
+        "linkedin": "https://linkedin.com/company/startup-innovation",
+        "deadline": "2024-07-25",
+        "location": "San Francisco, CA",
+        "email": "info@startupinnovationchallenge.com",
+        "phone": "(678) 901-2345"
+    },
+    {
+        "id": 5,
+        "title": "Essay Writing Competition",
+        "body": "Participate in the essay writing competition and win scholarships.",
+        "category": "Competitions",
+        "labels": {
+            "Payment": "Free",
+            "Competition Type": "Essay",
+            "Event Type": "Online"
+        },
+        "link": "https://essaywritingcompetition.com",
+        "linkedin": "https://linkedin.com/company/essay-competition",
+        "deadline": "2024-11-30",
+        "location": "Online",
+        "email": "info@essaywritingcompetition.com",
+        "phone": "(456) 789-0123"
+    }
+]

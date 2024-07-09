@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Board</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="filter-container">
+        <input type="text" id="search" placeholder="Search...">
+        <button id="all-opportunities" class="category-btn">All Opportunities</button>
+        <div id="category-buttons">
+            <button class="category-btn" data-category="internship">Internship</button>
+            <button class="category-btn" data-category="competitions">Competitions</button>
+            <button class="category-btn" data-category="mentors">Mentors</button>
+            <button class="category-btn" data-category="scholarships">Scholarships</button>
+            <button class="category-btn" data-category="volunteers">Volunteers</button>
+            <button class="category-btn" data-category="events">Events</button>
+        </div>
+    </div>
+    
+    <div id="label-filters"></div>
+    <div class="blog-layout">
+        <div class="left-section" id="titles-container"></div>
+        <div class="right-section" id="post-container"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
