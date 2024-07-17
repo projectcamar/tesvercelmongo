@@ -4,6 +4,8 @@ const search = document.getElementById('search');
 const categoryButtons = document.querySelectorAll('.category-btn');
 const allOpportunitiesButton = document.getElementById('all-opportunities');
 const labelFiltersContainer = document.getElementById('label-filters');
+const banner = document.getElementById('banner');
+const sortBySelect = document.getElementById('sort-by');
 
 let posts = [];
 let currentCategory = '';
@@ -14,51 +16,51 @@ const mentorCategory = 'mentors';
 const labels = {
     'Mentors': {
         'Field': ['Business And Management', 'Engineering, Technology & Data', 'General', 'Product & Design'],
-        'Skills': [],
-        'Organization': []
+        'Mentoring Topic': []
     }
 };
 
-async function fetchPosts(category = '') {
-    let data = [];
-    if (category && category !== mentorCategory) {
-        const res = await fetch(`/api/${category}`);
-        data = await res.json();
-    } else if (category === mentorCategory) {
-        const res = await fetch(`/api/${mentorCategory}`);
-        data = await res.json();
-    } else {
-        const res = await Promise.all(categories.map(cat => fetch(`/api/${cat}`)));
-        data = (await Promise.all(res.map(r => r.json()))).flat();
+async function fetchAllPosts() {
+    try {
+        const res = await fetch('http://localhost:3000/api/all');
+        const data = await res.json();
+
+        posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
+            categoryPosts.map(post => ({
+                ...post,
+                category,
+                expired: new Date(post.deadline) < new Date(),
+                daysLeft: Math.ceil((new Date(post.deadline) - new Date()) / (1000 * 60 * 60 * 24))
+            }))
+        );
+
+        const mentorPosts = posts.filter(post => post.category === mentorCategory);
+        const uniqueMentoringTopics = [...new Set(mentorPosts.map(post => post.labels['Mentoring Topic']).flat())];
+        labels['Mentors']['Mentoring Topic'] = uniqueMentoringTopics;
+
+        displayPosts();
+    } catch (error) {
+        console.error('Error fetching posts:', error);
     }
-
-    posts = data.map(post => ({
-        ...post,
-        expired: new Date(post.deadline) < new Date()
-    }));
-
-    // Populate unique companies and skills for Mentors
-    if (category === mentorCategory) {
-        const uniqueSkills = [...new Set(posts.map(post => post.labels['Skills']).flat())];
-        const uniqueOrganizations = [...new Set(posts.map(post => post.labels['Organization']))];
-        labels['Mentors']['Skills'] = uniqueSkills;
-        labels['Mentors']['Organization'] = uniqueOrganizations;
-    }
-
-    displayPosts();
 }
 
 function displayPosts() {
     titlesContainer.innerHTML = '';
-    const filteredPosts = posts.filter(post => currentCategory === '' || post.category.replace(/ /g, '_').toLowerCase() === currentCategory);
-    
-    // Sort posts by ID in descending order to display latest first
-    filteredPosts.sort((a, b) => b.id - a.id);
+    let filteredPosts = posts.filter(post => 
+        (currentCategory === '' && post.category !== mentorCategory) || 
+        post.category === currentCategory
+    );
+
+    if (sortBySelect.value === 'days-left') {
+        filteredPosts = filteredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    } else {
+        filteredPosts = filteredPosts.sort((a, b) => b.id - a.id);
+    }
 
     const activePosts = filteredPosts.filter(post => !post.expired);
     const expiredPosts = filteredPosts.filter(post => post.expired);
 
-    const sortedPosts = [...activePosts, ...expiredPosts]; // Ensure expired posts are at the bottom
+    const sortedPosts = [...activePosts, ...expiredPosts];
 
     sortedPosts.forEach(post => {
         const postEl = document.createElement('div');
@@ -66,85 +68,109 @@ function displayPosts() {
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
         postEl.innerHTML = `
-            <img src="${post.image}" alt="${post.title}" class="mentor-img">
-            <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
-                ${post.title}
-                ${post.expired ? '<span class="expired-label">Expired</span>' : ''}
-            </h3>
+            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
+            <div class="post-details">
+                <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
+                    ${post.title}
+                </h3>
+                <div class="labels-container">
+                    ${post.category === 'mentors' ? `<span class="label">${post.labels['Organization']}</span>` : 
+                    post.category !== 'internship' ? Object.entries(post.labels).map(([key, value]) => 
+                      Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
+                      `<span class="label">${value}</span>`
+                    ).join('') : `<span class="label">${post.labels['Company']}</span>`}
+                </div>
+                ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
+                (post.category !== 'mentors' && post.category !== 'internship' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
+            </div>
             <span class="category">${post.category}</span>
-            ${Object.entries(post.labels).map(([key, value]) => `<span class="label">${value}</span>`).join('')}
         `;
         postEl.addEventListener('click', () => {
             selectedPostTitle = post.title;
             displayFullPost(post);
             displayPosts();
+            banner.style.display = 'none';
         });
         titlesContainer.appendChild(postEl);
     });
 }
 
 function displayFullPost(post) {
+    const additionalInfo = post.category === 'internship' ? Object.entries(post.labels).map(([key, value]) => {
+        if (key !== 'Company' && key !== 'Position' && key !== 'Status') {
+            return Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
+            `<span class="label">${value}</span>`;
+        }
+        return '';
+    }).join('') : '';
+
     postContainer.innerHTML = `
         <div class="post-header">
-            <img src="${post.image}" alt="Company Logo" class="post-logo">
+            <img src="${post.image || ''}" alt="${post.title}" class="post-logo">
             <div class="post-title-company">
-                <h2>${post.title}</h2>
-                <p class="company-name">${post.labels['Organization'] || 'Company Name'}</p>
+                <h2>${post.title || 'Untitled Post'}</h2>
+                <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
             </div>
-        </div>
-        <div class="post-labels">
-            ${Object.entries(post.labels).map(([key, value]) => `<span class="label">${value}</span>`).join('')}
         </div>
         <div class="post-actions">
-            ${post.category === 'Mentors' ? `
+            ${post.category === 'mentors' ? `
             <div class="action-icons">
-                <a href="${post.linkedin}" target="_blank" class="linkedin-button">LinkedIn</a>
-                <a href="${post.instagram}" target="_blank" class="instagram-button">Instagram</a>
+                <a href="${post.linkedin || '#'}" target="_blank" class="linkedin-button">LinkedIn</a>
+                <a href="${post.instagram || '#'}" target="_blank" class="instagram-button">Instagram</a>
             </div>
-            <a href="${post.link}" target="_blank" class="schedule-mentoring-button">Schedule Mentoring</a>
+            <a href="${post.link || '#'}" target="_blank" class="schedule-mentoring-button">Schedule Mentoring</a>
             ` : `
-            <a href="${post.link}" target="_blank" class="apply-button">Apply here</a>
+            <a href="${post.link || '#'}" target="_blank" class="apply-button">Apply here</a>
             `}
         </div>
-        ${post.category === 'Mentors' ? `
+        ${post.category === 'mentors' ? `
+        <div class="section-divider"></div>
+        <div class="post-section mentoring-topic">
+            <h3>Mentoring Topic</h3>
+            <div class="mentoring-topic-labels">
+                ${post.labels && post.labels['Mentoring Topic'] ? post.labels['Mentoring Topic'].map(topic => `<span class="label">${topic}</span>`).join('') : 'No topics available'}
+            </div>
+        </div>
         <div class="section-divider"></div>
         <div class="post-section">
             <h3>Experience</h3>
             <ul>
-                ${post.experience.map(exp => `<li>${exp}</li>`).join('')}
+                ${post.experience ? post.experience.map(exp => `<li>${exp}</li>`).join('') : '<li>No experience listed</li>'}
             </ul>
         </div>
         <div class="post-section">
             <h3>Education</h3>
             <ul>
-                ${post.education.map(edu => `<li>${edu}</li>`).join('')}
+                ${post.education ? post.education.map(edu => `<li>${edu}</li>`).join('') : '<li>No education listed</li>'}
             </ul>
-        </div>` : `
+        </div>` : post.category === 'internship' ? `
         <div class="section-divider"></div>
         <div class="post-section">
-            <h3>Category</h3>
-            <p>${post.category}</p>
+            <h3>Responsibilities</h3>
+            <ul>${post.responsibilities ? post.responsibilities.map(res => `<li>${res}</li>`).join('') : '<li>No responsibilities listed</li>'}</ul>
         </div>
         <div class="post-section">
-            <h3>Description</h3>
-            <p>${post.body}</p>
+            <h3>Requirements</h3>
+            <ul>${post.requirements ? post.requirements.map(req => `<li>${req}</li>`).join('') : '<li>No requirements listed</li>'}</ul>
+        </div>
+        <div class="post-section">
+            <h3>Additional Information</h3>
+            <p>${additionalInfo || 'No additional information available'}</p>
+        </div>
+        ` : `
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>${post.category.charAt(0).toUpperCase() + post.category.slice(1)} Details</h3>
+            ${Array.isArray(post.body) ? post.body.map(line => `<p>${line}</p>`).join('') : '<p>No details available</p>'}
+        </div>
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>Additional Information</h3>
+            <p>Deadline: ${post.deadline || 'Not specified'}</p>
+            <p>Location: ${post.location || 'Not specified'}</p>
+            <p>Contact: ${post.email || 'No email provided'}${post.phone ? `, ${post.phone}` : ''}</p>
         </div>
         `}
-        <div class="section-divider"></div>
-        <div class="post-section">
-            <h3>Company Information</h3>
-            <div class="company-info">
-                <div class="company-info-item">
-                    <strong>Location:</strong> ${post.location}
-                </div>
-                <div class="company-info-item">
-                    <strong>Email:</strong> ${post.email}
-                </div>
-                <div class="company-info-item">
-                    <strong>Phone:</strong> ${post.phone}
-                </div>
-            </div>
-        </div>
     `;
 }
 
@@ -156,17 +182,24 @@ function filterPosts() {
     }, {});
 
     const filteredPosts = posts.filter(post => {
-        const matchesSearch = post.title.toLowerCase().includes(searchTerm) || post.body.toLowerCase().includes(searchTerm);
-        const matchesCategory = currentCategory === '' || post.category.replace(/ /g, '_').toLowerCase() === currentCategory;
-        const matchesLabels = Object.entries(selectedLabels).every(([key, value]) => value === '' || post.labels[key] === value);
+        const matchesSearch = post.title.toLowerCase().includes(searchTerm) || (post.body && post.body.toLowerCase().includes(searchTerm));
+        const matchesCategory = (currentCategory === '' && post.category !== mentorCategory) || post.category === currentCategory;
+        const matchesLabels = Object.entries(selectedLabels).every(([key, value]) => 
+            value === '' || (Array.isArray(post.labels[key]) ? post.labels[key].includes(value) : post.labels[key] === value)
+        );
         return matchesSearch && matchesCategory && matchesLabels;
     });
 
     titlesContainer.innerHTML = '';
-    const activePosts = filteredPosts.filter(post => !post.expired);
-    const expiredPosts = filteredPosts.filter(post => post.expired);
+    let activePosts = filteredPosts.filter(post => !post.expired);
+    let expiredPosts = filteredPosts.filter(post => post.expired);
 
-    const sortedFilteredPosts = [...activePosts, ...expiredPosts]; // Ensure expired posts are at the bottom
+    if (sortBySelect.value === 'days-left') {
+        activePosts = activePosts.sort((a, b) => a.daysLeft - b.daysLeft);
+        expiredPosts = expiredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    }
+
+    const sortedFilteredPosts = [...activePosts, ...expiredPosts];
 
     sortedFilteredPosts.forEach(post => {
         const postEl = document.createElement('div');
@@ -174,63 +207,100 @@ function filterPosts() {
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
         postEl.innerHTML = `
-            <img src="${post.image}" alt="${post.title}" class="mentor-img">
-            <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
-                ${post.title}
-                ${post.expired ? '<span class="expired-label">Expired</span>' : ''}
-            </h3>
+            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
+            <div class="post-details">
+                <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
+                    ${post.title}
+                </h3>
+                <div class="labels-container">
+                    ${post.category === 'mentors' ? `<span class="label">${post.labels['Organization']}</span>` : 
+                    post.category !== 'internship' ? Object.entries(post.labels).map(([key, value]) => 
+                      Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
+                      `<span class="label">${value}</span>`
+                    ).join('') : `<span class="label">${post.labels['Company']}</span>`}
+                </div>
+                ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
+                  (post.category !== 'mentors' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
+            </div>
             <span class="category">${post.category}</span>
-            ${Object.entries(post.labels).map(([key, value]) => `<span class="label">${value}</span>`).join('')}
         `;
         postEl.addEventListener('click', () => {
             selectedPostTitle = post.title;
             displayFullPost(post);
             displayPosts();
+            banner.style.display = 'none';
         });
         titlesContainer.appendChild(postEl);
     });
 }
 
-function updateLabelFilters(category) {
+function createLabelFilters(labels) {
     labelFiltersContainer.innerHTML = '';
-    if (labels[category]) {
-        Object.entries(labels[category]).forEach(([key, values]) => {
-            const select = document.createElement('select');
-            select.id = key;
-            select.classList.add('label-filter');
-            select.innerHTML = `
-                <option value="">All ${key}</option>
-                ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
-            `;
-            select.addEventListener('change', filterPosts);
-            labelFiltersContainer.appendChild(select);
-        });
-    }
-}
 
-search.addEventListener('input', filterPosts);
+    Object.entries(labels).forEach(([labelCategory, labelValues]) => {
+        const filterContainer = document.createElement('div');
+        filterContainer.classList.add('label-filter-container');
+
+        const filterLabel = document.createElement('label');
+        filterLabel.textContent = labelCategory;
+        filterContainer.appendChild(filterLabel);
+
+        const filterSelect = document.createElement('select');
+        filterSelect.classList.add('label-filter');
+        filterSelect.id = labelCategory;
+        filterSelect.addEventListener('change', filterPosts);
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = `Select ${labelCategory}`;
+        filterSelect.appendChild(defaultOption);
+
+        labelValues.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            filterSelect.appendChild(option);
+        });
+
+        filterContainer.appendChild(filterSelect);
+        labelFiltersContainer.appendChild(filterContainer);
+    });
+}
 
 categoryButtons.forEach(button => {
     button.addEventListener('click', () => {
+        currentCategory = button.dataset.category;
+        displayPosts();
         categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-        currentCategory = button.dataset.category;
-        selectedPostTitle = null; // Reset selected post
-        updateLabelFilters(currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1));
-        fetchPosts(currentCategory);
+
+        if (currentCategory === mentorCategory) {
+            createLabelFilters(labels['Mentors']);
+        } else {
+            labelFiltersContainer.innerHTML = '';
+        }
     });
 });
 
-// Load all opportunities when the page first loads
-window.addEventListener('DOMContentLoaded', () => {
-    allOpportunitiesButton.classList.add('active');
-    fetchPosts();
-});
-
 allOpportunitiesButton.addEventListener('click', () => {
+    currentCategory = '';
+    displayPosts();
     categoryButtons.forEach(btn => btn.classList.remove('active'));
     allOpportunitiesButton.classList.add('active');
-    currentCategory = '';
-    selectedPostTitle = null; // Reset selected post
-    fetchPosts();
+    labelFiltersContainer.innerHTML = '';
+});
+
+sortBySelect.addEventListener('change', displayPosts);
+search.addEventListener('input', filterPosts);
+
+fetchAllPosts();
+
+// Disable right-click
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// Disable Ctrl+U and F12
+document.addEventListener('keydown', event => {
+    if (event.ctrlKey && event.key === 'u' || event.keyCode === 123) {
+        event.preventDefault();
+    }
 });
