@@ -90,6 +90,15 @@ categories.forEach(category => {
   });
 });
 
+app.get('/api/scholarships', (req, res) => {
+  // Logic to fetch and return scholarships data
+});
+
+app.get('/api/competitions', (req, res) => {
+  // Logic to fetch and return competitions data
+});
+
+// Implement similar routes for events, volunteers, and internships
 // Existing code...
 // Start the server
 async function startServer() {
