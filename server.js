@@ -60,7 +60,37 @@ app.get('/api/all', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// Existing code...
 
+// API Endpoint to fetch all data
+app.get('/api/all', async (req, res) => {
+  try {
+    const data = await getAllData();
+    res.json(data);
+  } catch (error) {
+    console.error('Error in /api/all endpoint:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// New endpoints for individual categories
+const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
+
+categories.forEach(category => {
+  app.get(`/api/${category}`, async (req, res) => {
+    try {
+      const database = client.db('learnitabDatabase');
+      const collection = database.collection(category);
+      const data = await collection.find({}).toArray();
+      res.json(data);
+    } catch (error) {
+      console.error(`Error fetching ${category}:`, error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+});
+
+// Existing code...
 // Start the server
 async function startServer() {
   try {
