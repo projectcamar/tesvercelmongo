@@ -98,6 +98,19 @@ app.get('/api/competitions', (req, res) => {
   // Logic to fetch and return competitions data
 });
 
+app.get('/api/all', (req, res) => {
+  // Logic to fetch and return competitions data
+});
+
+app.get('/api/internship', (req, res) => {
+  // Logic to fetch and return competitions data
+});
+
+
+app.get('/api/mentors', (req, res) => {
+  // Logic to fetch and return competitions data
+});
+
 // Implement similar routes for events, volunteers, and internships
 // Existing code...
 // Start the server
