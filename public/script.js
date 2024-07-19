@@ -20,6 +20,24 @@ const labels = {
     }
 };
 
+document.querySelectorAll('.category-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const category = button.textContent.trim().toLowerCase();
+        filterOpportunities(category);
+    });
+});
+
+function filterOpportunities(category) {
+    const opportunities = document.querySelectorAll('.opportunity');
+    opportunities.forEach(opportunity => {
+        if (category === 'all opportunities' || opportunity.dataset.category.toLowerCase() === category) {
+            opportunity.style.display = 'block';
+        } else {
+            opportunity.style.display = 'none';
+        }
+    });
+}
+
 async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
