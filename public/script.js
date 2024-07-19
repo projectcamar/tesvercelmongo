@@ -24,7 +24,19 @@ async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
         const data = await res.json();
-
+async function fetchAllPosts() {
+  try {
+    const res = await fetch('/api/all');
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    // ... rest of the function
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    // Maybe update the UI to show an error message
+  }
+}
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
             categoryPosts.map(post => ({
                 ...post,
