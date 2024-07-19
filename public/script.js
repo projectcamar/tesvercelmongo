@@ -10,9 +10,6 @@ const sortBySelect = document.getElementById('sort-by');
 let posts = [];
 let currentCategory = '';
 let selectedPostTitle = null;
-let currentPage = 1;
-const postsPerPage = 10;
-let isLoading = false;
 
 const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
 const mentorCategory = 'mentors';
@@ -44,10 +41,20 @@ function filterOpportunities(category) {
 async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
         const data = await res.json();
+async function fetchAllPosts() {
+  try {
+    const res = await fetch('/api/all');
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    // ... rest of the function
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    // Maybe update the UI to show an error message
+  }
+}
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
             categoryPosts.map(post => ({
                 ...post,
@@ -69,14 +76,6 @@ async function fetchAllPosts() {
 
 function displayPosts() {
     titlesContainer.innerHTML = '';
-    currentPage = 1;
-    loadMorePosts();
-}
-
-function loadMorePosts() {
-    if (isLoading) return;
-    isLoading = true;
-
     let filteredPosts = posts.filter(post => 
         (currentCategory === '' && post.category !== mentorCategory) || 
         post.category === currentCategory
@@ -93,11 +92,7 @@ function loadMorePosts() {
 
     const sortedPosts = [...activePosts, ...expiredPosts];
 
-    const startIndex = (currentPage - 1) * postsPerPage;
-    const endIndex = startIndex + postsPerPage;
-    const postsToDisplay = sortedPosts.slice(startIndex, endIndex);
-
-    postsToDisplay.forEach(post => {
+    sortedPosts.forEach(post => {
         const postEl = document.createElement('div');
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
@@ -128,25 +123,85 @@ function loadMorePosts() {
         });
         titlesContainer.appendChild(postEl);
     });
-
-    currentPage++;
-    isLoading = false;
-
-    if (endIndex >= sortedPosts.length) {
-        // No more posts to load
-        titlesContainer.removeEventListener('scroll', handleScroll);
-    }
-}
-
-function handleScroll() {
-    const { scrollTop, scrollHeight, clientHeight } = titlesContainer;
-    if (scrollTop + clientHeight >= scrollHeight - 5) {
-        loadMorePosts();
-    }
 }
 
 function displayFullPost(post) {
-    // ... (rest of the displayFullPost function remains unchanged)
+    const additionalInfo = post.category === 'internship' ? Object.entries(post.labels).map(([key, value]) => {
+        if (key !== 'Company' && key !== 'Position' && key !== 'Status') {
+            return Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
+            `<span class="label">${value}</span>`;
+        }
+        return '';
+    }).join('') : '';
+
+    postContainer.innerHTML = `
+        <div class="post-header">
+            <img src="${post.image || ''}" alt="${post.title}" class="post-logo">
+            <div class="post-title-company">
+                <h2>${post.title || 'Untitled Post'}</h2>
+                <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
+            </div>
+        </div>
+        <div class="post-actions">
+            ${post.category === 'mentors' ? `
+            <div class="action-icons">
+                <a href="${post.linkedin || '#'}" target="_blank" class="linkedin-button">LinkedIn</a>
+                <a href="${post.instagram || '#'}" target="_blank" class="instagram-button">Instagram</a>
+            </div>
+            <a href="${post.link || '#'}" target="_blank" class="schedule-mentoring-button">Schedule Mentoring</a>
+            ` : `
+            <a href="${post.link || '#'}" target="_blank" class="apply-button">Apply here</a>
+            `}
+        </div>
+        ${post.category === 'mentors' ? `
+        <div class="section-divider"></div>
+        <div class="post-section mentoring-topic">
+            <h3>Mentoring Topic</h3>
+            <div class="mentoring-topic-labels">
+                ${post.labels && post.labels['Mentoring Topic'] ? post.labels['Mentoring Topic'].map(topic => `<span class="label">${topic}</span>`).join('') : 'No topics available'}
+            </div>
+        </div>
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>Experience</h3>
+            <ul>
+                ${post.experience ? post.experience.map(exp => `<li>${exp}</li>`).join('') : '<li>No experience listed</li>'}
+            </ul>
+        </div>
+        <div class="post-section">
+            <h3>Education</h3>
+            <ul>
+                ${post.education ? post.education.map(edu => `<li>${edu}</li>`).join('') : '<li>No education listed</li>'}
+            </ul>
+        </div>` : post.category === 'internship' ? `
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>Responsibilities</h3>
+            <ul>${post.responsibilities ? post.responsibilities.map(res => `<li>${res}</li>`).join('') : '<li>No responsibilities listed</li>'}</ul>
+        </div>
+        <div class="post-section">
+            <h3>Requirements</h3>
+            <ul>${post.requirements ? post.requirements.map(req => `<li>${req}</li>`).join('') : '<li>No requirements listed</li>'}</ul>
+        </div>
+        <div class="post-section">
+            <h3>Additional Information</h3>
+            <p>${additionalInfo || 'No additional information available'}</p>
+        </div>
+        ` : `
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>${post.category.charAt(0).toUpperCase() + post.category.slice(1)} Details</h3>
+            ${Array.isArray(post.body) ? post.body.map(line => `<p>${line}</p>`).join('') : '<p>No details available</p>'}
+        </div>
+        <div class="section-divider"></div>
+        <div class="post-section">
+            <h3>Additional Information</h3>
+            <p>Deadline: ${post.deadline || 'Not specified'}</p>
+            <p>Location: ${post.location || 'Not specified'}</p>
+            <p>Contact: ${post.email || 'No email provided'}${post.phone ? `, ${post.phone}` : ''}</p>
+        </div>
+        `}
+    `;
 }
 
 function filterPosts() {
@@ -166,13 +221,80 @@ function filterPosts() {
     });
 
     titlesContainer.innerHTML = '';
-    currentPage = 1;
-    posts = filteredPosts;
-    loadMorePosts();
+    let activePosts = filteredPosts.filter(post => !post.expired);
+    let expiredPosts = filteredPosts.filter(post => post.expired);
+
+    if (sortBySelect.value === 'days-left') {
+        activePosts = activePosts.sort((a, b) => a.daysLeft - b.daysLeft);
+        expiredPosts = expiredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    }
+
+    const sortedFilteredPosts = [...activePosts, ...expiredPosts];
+
+    sortedFilteredPosts.forEach(post => {
+        const postEl = document.createElement('div');
+        postEl.classList.add('post');
+        if (post.expired) postEl.classList.add('expired');
+        if (selectedPostTitle === post.title) postEl.classList.add('clicked');
+        postEl.innerHTML = `
+            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
+            <div class="post-details">
+                <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
+                    ${post.title}
+                </h3>
+                <div class="labels-container">
+                    ${post.category === 'mentors' ? `<span class="label">${post.labels['Organization']}</span>` : 
+                    post.category !== 'internship' ? Object.entries(post.labels).map(([key, value]) => 
+                      Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
+                      `<span class="label">${value}</span>`
+                    ).join('') : `<span class="label">${post.labels['Company']}</span>`}
+                </div>
+                ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
+                  (post.category !== 'mentors' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
+            </div>
+            <span class="category">${post.category}</span>
+        `;
+        postEl.addEventListener('click', () => {
+            selectedPostTitle = post.title;
+            displayFullPost(post);
+            displayPosts();
+            banner.style.display = 'none';
+        });
+        titlesContainer.appendChild(postEl);
+    });
 }
 
 function createLabelFilters(labels) {
-    // ... (rest of the createLabelFilters function remains unchanged)
+    labelFiltersContainer.innerHTML = '';
+
+    Object.entries(labels).forEach(([labelCategory, labelValues]) => {
+        const filterContainer = document.createElement('div');
+        filterContainer.classList.add('label-filter-container');
+
+        const filterLabel = document.createElement('label');
+        filterLabel.textContent = labelCategory;
+        filterContainer.appendChild(filterLabel);
+
+        const filterSelect = document.createElement('select');
+        filterSelect.classList.add('label-filter');
+        filterSelect.id = labelCategory;
+        filterSelect.addEventListener('change', filterPosts);
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = `Select ${labelCategory}`;
+        filterSelect.appendChild(defaultOption);
+
+        labelValues.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            filterSelect.appendChild(option);
+        });
+
+        filterContainer.appendChild(filterSelect);
+        labelFiltersContainer.appendChild(filterContainer);
+    });
 }
 
 categoryButtons.forEach(button => {
@@ -200,8 +322,6 @@ allOpportunitiesButton.addEventListener('click', () => {
 
 sortBySelect.addEventListener('change', displayPosts);
 search.addEventListener('input', filterPosts);
-
-titlesContainer.addEventListener('scroll', handleScroll);
 
 fetchAllPosts();
 
