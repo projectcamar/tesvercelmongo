@@ -10,6 +10,9 @@ const sortBySelect = document.getElementById('sort-by');
 let posts = [];
 let currentCategory = '';
 let selectedPostTitle = null;
+let currentPage = 1;
+const postsPerPage = 10;
+let isLoading = false;
 
 const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
 const mentorCategory = 'mentors';
@@ -41,20 +44,10 @@ function filterOpportunities(category) {
 async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
-async function fetchAllPosts() {
-  try {
-    const res = await fetch('/api/all');
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    // ... rest of the function
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    // Maybe update the UI to show an error message
-  }
-}
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
             categoryPosts.map(post => ({
                 ...post,
@@ -76,6 +69,14 @@ async function fetchAllPosts() {
 
 function displayPosts() {
     titlesContainer.innerHTML = '';
+    currentPage = 1;
+    loadMorePosts();
+}
+
+function loadMorePosts() {
+    if (isLoading) return;
+    isLoading = true;
+
     let filteredPosts = posts.filter(post => 
         (currentCategory === '' && post.category !== mentorCategory) || 
         post.category === currentCategory
@@ -92,7 +93,11 @@ function displayPosts() {
 
     const sortedPosts = [...activePosts, ...expiredPosts];
 
-    sortedPosts.forEach(post => {
+    const start = (currentPage - 1) * postsPerPage;
+    const end = start + postsPerPage;
+    const postsToDisplay = sortedPosts.slice(start, end);
+
+    postsToDisplay.forEach(post => {
         const postEl = document.createElement('div');
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
@@ -118,11 +123,26 @@ function displayPosts() {
         postEl.addEventListener('click', () => {
             selectedPostTitle = post.title;
             displayFullPost(post);
-            displayPosts();
             banner.style.display = 'none';
         });
         titlesContainer.appendChild(postEl);
     });
+
+    currentPage++;
+    isLoading = false;
+
+    if (end >= sortedPosts.length) {
+        // All posts have been loaded
+        titlesContainer.removeEventListener('scroll', handleScroll);
+    }
+}
+
+function handleScroll() {
+    if (isLoading) return;
+    const { scrollTop, scrollHeight, clientHeight } = titlesContainer;
+    if (scrollTop + clientHeight >= scrollHeight - 5) {
+        loadMorePosts();
+    }
 }
 
 function displayFullPost(post) {
@@ -211,7 +231,7 @@ function filterPosts() {
         return acc;
     }, {});
 
-    const filteredPosts = posts.filter(post => {
+    posts = posts.filter(post => {
         const matchesSearch = post.title.toLowerCase().includes(searchTerm) || (post.body && post.body.toLowerCase().includes(searchTerm));
         const matchesCategory = (currentCategory === '' && post.category !== mentorCategory) || post.category === currentCategory;
         const matchesLabels = Object.entries(selectedLabels).every(([key, value]) => 
@@ -221,47 +241,8 @@ function filterPosts() {
     });
 
     titlesContainer.innerHTML = '';
-    let activePosts = filteredPosts.filter(post => !post.expired);
-    let expiredPosts = filteredPosts.filter(post => post.expired);
-
-    if (sortBySelect.value === 'days-left') {
-        activePosts = activePosts.sort((a, b) => a.daysLeft - b.daysLeft);
-        expiredPosts = expiredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
-    }
-
-    const sortedFilteredPosts = [...activePosts, ...expiredPosts];
-
-    sortedFilteredPosts.forEach(post => {
-        const postEl = document.createElement('div');
-        postEl.classList.add('post');
-        if (post.expired) postEl.classList.add('expired');
-        if (selectedPostTitle === post.title) postEl.classList.add('clicked');
-        postEl.innerHTML = `
-            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
-            <div class="post-details">
-                <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
-                    ${post.title}
-                </h3>
-                <div class="labels-container">
-                    ${post.category === 'mentors' ? `<span class="label">${post.labels['Organization']}</span>` : 
-                    post.category !== 'internship' ? Object.entries(post.labels).map(([key, value]) => 
-                      Array.isArray(value) ? value.map(v => `<span class="label">${v}</span>`).join('') :
-                      `<span class="label">${value}</span>`
-                    ).join('') : `<span class="label">${post.labels['Company']}</span>`}
-                </div>
-                ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
-                  (post.category !== 'mentors' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
-            </div>
-            <span class="category">${post.category}</span>
-        `;
-        postEl.addEventListener('click', () => {
-            selectedPostTitle = post.title;
-            displayFullPost(post);
-            displayPosts();
-            banner.style.display = 'none';
-        });
-        titlesContainer.appendChild(postEl);
-    });
+    currentPage = 1;
+    loadMorePosts();
 }
 
 function createLabelFilters(labels) {
@@ -300,7 +281,9 @@ function createLabelFilters(labels) {
 categoryButtons.forEach(button => {
     button.addEventListener('click', () => {
         currentCategory = button.dataset.category;
-        displayPosts();
+        titlesContainer.innerHTML = '';
+        currentPage = 1;
+        loadMorePosts();
         categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
@@ -314,14 +297,23 @@ categoryButtons.forEach(button => {
 
 allOpportunitiesButton.addEventListener('click', () => {
     currentCategory = '';
-    displayPosts();
+    titlesContainer.innerHTML = '';
+    currentPage = 1;
+    loadMorePosts();
     categoryButtons.forEach(btn => btn.classList.remove('active'));
     allOpportunitiesButton.classList.add('active');
     labelFiltersContainer.innerHTML = '';
 });
 
-sortBySelect.addEventListener('change', displayPosts);
+sortBySelect.addEventListener('change', () => {
+    titlesContainer.innerHTML = '';
+    currentPage = 1;
+    loadMorePosts();
+});
+
 search.addEventListener('input', filterPosts);
+
+titlesContainer.addEventListener('scroll', handleScroll);
 
 fetchAllPosts();
 
