@@ -22,7 +22,7 @@ const labels = {
 
 async function fetchAllPosts() {
     try {
-        const res = await fetch('http://localhost:3000/api/all');
+        const res = await fetch('/api/all');
         const data = await res.json();
 
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
