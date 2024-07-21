@@ -10,6 +10,9 @@ const sortBySelect = document.getElementById('sort-by');
 let posts = [];
 let currentCategory = '';
 let selectedPostTitle = null;
+let isLoading = false;
+let currentPage = 1;
+const postsPerPage = 10;
 
 const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
 const mentorCategory = 'mentors';
@@ -41,20 +44,10 @@ function filterOpportunities(category) {
 async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
-async function fetchAllPosts() {
-  try {
-    const res = await fetch('/api/all');
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    // ... rest of the function
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    // Maybe update the UI to show an error message
-  }
-}
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
             categoryPosts.map(post => ({
                 ...post,
@@ -92,7 +85,9 @@ function displayPosts() {
 
     const sortedPosts = [...activePosts, ...expiredPosts];
 
-    sortedPosts.forEach(post => {
+    const postsToShow = sortedPosts.slice(0, currentPage * postsPerPage);
+
+    postsToShow.forEach(post => {
         const postEl = document.createElement('div');
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
@@ -220,6 +215,11 @@ function filterPosts() {
         return matchesSearch && matchesCategory && matchesLabels;
     });
 
+    currentPage = 1;
+    displayFilteredPosts(filteredPosts);
+}
+
+function displayFilteredPosts(filteredPosts) {
     titlesContainer.innerHTML = '';
     let activePosts = filteredPosts.filter(post => !post.expired);
     let expiredPosts = filteredPosts.filter(post => post.expired);
@@ -230,8 +230,9 @@ function filterPosts() {
     }
 
     const sortedFilteredPosts = [...activePosts, ...expiredPosts];
+    const postsToShow = sortedFilteredPosts.slice(0, currentPage * postsPerPage);
 
-    sortedFilteredPosts.forEach(post => {
+    postsToShow.forEach(post => {
         const postEl = document.createElement('div');
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
@@ -250,18 +251,24 @@ function filterPosts() {
                     ).join('') : `<span class="label">${post.labels['Company']}</span>`}
                 </div>
                 ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
-                  (post.category !== 'mentors' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
+                (post.category !== 'mentors' && post.category !== 'internship' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
             </div>
             <span class="category">${post.category}</span>
         `;
         postEl.addEventListener('click', () => {
             selectedPostTitle = post.title;
             displayFullPost(post);
-            displayPosts();
+            displayFilteredPosts(filteredPosts);
             banner.style.display = 'none';
         });
         titlesContainer.appendChild(postEl);
     });
+
+    if (postsToShow.length === 0) {
+        const noPostsMessage = document.createElement('div');
+        noPostsMessage.textContent = 'No posts found.';
+        titlesContainer.appendChild(noPostsMessage);
+    }
 }
 
 function createLabelFilters(labels) {
@@ -300,6 +307,7 @@ function createLabelFilters(labels) {
 categoryButtons.forEach(button => {
     button.addEventListener('click', () => {
         currentCategory = button.dataset.category;
+        currentPage = 1;
         displayPosts();
         categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
@@ -314,14 +322,49 @@ categoryButtons.forEach(button => {
 
 allOpportunitiesButton.addEventListener('click', () => {
     currentCategory = '';
+    currentPage = 1;
     displayPosts();
     categoryButtons.forEach(btn => btn.classList.remove('active'));
     allOpportunitiesButton.classList.add('active');
     labelFiltersContainer.innerHTML = '';
 });
 
-sortBySelect.addEventListener('change', displayPosts);
+sortBySelect.addEventListener('change', () => {
+    currentPage = 1;
+    displayPosts();
+});
+
 search.addEventListener('input', filterPosts);
+
+// Infinite scrolling
+window.addEventListener('scroll', () => {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+    
+    if (scrollTop + clientHeight >= scrollHeight - 5 && !isLoading) {
+        loadMorePosts();
+    }
+});
+
+function loadMorePosts() {
+    isLoading = true;
+    currentPage++;
+    
+    // Show loading animation
+    const loadingEl = document.createElement('div');
+    loadingEl.classList.add('loading');
+    loadingEl.textContent = 'Loading...';
+    titlesContainer.appendChild(loadingEl);
+
+    setTimeout(() => {
+        // Remove loading animation
+        loadingEl.remove();
+
+        // Load more posts
+        displayPosts();
+
+        isLoading = false;
+    }, 1000);
+}
 
 fetchAllPosts();
 
