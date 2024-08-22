@@ -14,12 +14,6 @@ let selectedPostTitle = null;
 
 const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
 const mentorCategory = 'mentors';
-const labels = {
-    'Mentors': {
-        'Field': ['Business And Management', 'Engineering, Technology & Data', 'General', 'Product & Design'],
-        'Mentoring Topic': []
-    }
-};
 
 document.querySelectorAll('.category-button').forEach(button => {
     button.addEventListener('click', () => {
