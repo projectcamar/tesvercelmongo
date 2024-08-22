@@ -1,3 +1,4 @@
+
 const titlesContainer = document.getElementById('titles-container');
 const postContainer = document.getElementById('post-container');
 const search = document.getElementById('search');
@@ -5,6 +6,7 @@ const categoryButtons = document.querySelectorAll('.category-btn');
 const allOpportunitiesButton = document.getElementById('all-opportunities');
 const labelFiltersContainer = document.getElementById('label-filters');
 const banner = document.getElementById('banner');
+const sortBySelect = document.getElementById('sort-by');
 
 let posts = [];
 let currentCategory = '';
@@ -13,17 +15,47 @@ let selectedPostTitle = null;
 const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 'events'];
 const mentorCategory = 'mentors';
 const labels = {
-    '': {
+    'Mentors': {
         'Field': ['Business And Management', 'Engineering, Technology & Data', 'General', 'Product & Design'],
-        'Mentoring Topic': []  // Empty since you want to remove the filter
+        'Mentoring Topic': []
     }
 };
 
+document.querySelectorAll('.category-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const category = button.textContent.trim().toLowerCase();
+        filterOpportunities(category);
+    });
+});
+
+function filterOpportunities(category) {
+    const opportunities = document.querySelectorAll('.opportunity');
+    opportunities.forEach(opportunity => {
+        if (category === 'all opportunities' || opportunity.dataset.category.toLowerCase() === category) {
+            opportunity.style.display = 'block';
+        } else {
+            opportunity.style.display = 'none';
+        }
+    });
+}
+
 async function fetchAllPosts() {
     try {
-        const res = await fetch('http://localhost:3000/api/all');
+        const res = await fetch('/api/all');
         const data = await res.json();
-
+async function fetchAllPosts() {
+  try {
+    const res = await fetch('/api/all');
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    // ... rest of the function
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    // Maybe update the UI to show an error message
+  }
+}
         posts = Object.entries(data).flatMap(([category, categoryPosts]) =>
             categoryPosts.map(post => ({
                 ...post,
@@ -50,8 +82,11 @@ function displayPosts() {
         post.category === currentCategory
     );
 
-    // Sort posts if necessary
-    filteredPosts = filteredPosts.sort((a, b) => b.id - a.id); // Default sorting by ID (or any other default order)
+    if (sortBySelect.value === 'days-left') {
+        filteredPosts = filteredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    } else {
+        filteredPosts = filteredPosts.sort((a, b) => b.id - a.id);
+    }
 
     const activePosts = filteredPosts.filter(post => !post.expired);
     const expiredPosts = filteredPosts.filter(post => post.expired);
@@ -178,11 +213,10 @@ function filterPosts() {
     }, {});
 
     const filteredPosts = posts.filter(post => {
-        const matchesSearch = post.title.toLowerCase().includes(searchTerm) ||
-            (post.description && post.description.toLowerCase().includes(searchTerm));
-        const matchesCategory = currentCategory === '' || post.category === currentCategory;
-        const matchesLabels = Object.keys(selectedLabels).every(key => 
-            selectedLabels[key] === '' || (post.labels[key] ? Array.isArray(post.labels[key]) ? post.labels[key].includes(selectedLabels[key]) : post.labels[key] === selectedLabels[key] : false)
+        const matchesSearch = post.title.toLowerCase().includes(searchTerm) || (post.body && post.body.toLowerCase().includes(searchTerm));
+        const matchesCategory = (currentCategory === '' && post.category !== mentorCategory) || post.category === currentCategory;
+        const matchesLabels = Object.entries(selectedLabels).every(([key, value]) => 
+            value === '' || (Array.isArray(post.labels[key]) ? post.labels[key].includes(value) : post.labels[key] === value)
         );
         return matchesSearch && matchesCategory && matchesLabels;
     });
@@ -190,6 +224,11 @@ function filterPosts() {
     titlesContainer.innerHTML = '';
     let activePosts = filteredPosts.filter(post => !post.expired);
     let expiredPosts = filteredPosts.filter(post => post.expired);
+
+    if (sortBySelect.value === 'days-left') {
+        activePosts = activePosts.sort((a, b) => a.daysLeft - b.daysLeft);
+        expiredPosts = expiredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    }
 
     const sortedFilteredPosts = [...activePosts, ...expiredPosts];
 
@@ -212,7 +251,7 @@ function filterPosts() {
                     ).join('') : `<span class="label">${post.labels['Company']}</span>`}
                 </div>
                 ${post.expired ? '<span class="status-label expired-label">Expired</span>' : 
-                (post.category !== 'mentors' && post.category !== 'internship' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
+                  (post.category !== 'mentors' ? `<span class="status-label days-left-label">${post.daysLeft} days left</span>` : '')}
             </div>
             <span class="category">${post.category}</span>
         `;
@@ -226,59 +265,73 @@ function filterPosts() {
     });
 }
 
-function updateCategory(event) {
-    currentCategory = event.target.dataset.category || '';
-    selectedPostTitle = null;
-    displayPosts();
-}
+function createLabelFilters(labels) {
+    labelFiltersContainer.innerHTML = '';
 
-function updateLabels() {
-    filterPosts();
-}
+    Object.entries(labels).forEach(([labelCategory, labelValues]) => {
+        const filterContainer = document.createElement('div');
+        filterContainer.classList.add('label-filter-container');
 
-function updateSearch() {
-    filterPosts();
-}
+        const filterLabel = document.createElement('label');
+        filterLabel.textContent = labelCategory;
+        filterContainer.appendChild(filterLabel);
 
-function setupLabelFilters() {
-    Object.keys(labels).forEach(category => {
-        const categoryFilters = labels[category];
-        const categoryContainer = document.createElement('div');
-        categoryContainer.classList.add('label-category');
-        categoryContainer.innerHTML = `<h3>${category}</h3>`;
+        const filterSelect = document.createElement('select');
+        filterSelect.classList.add('label-filter');
+        filterSelect.id = labelCategory;
+        filterSelect.addEventListener('change', filterPosts);
 
-        Object.entries(categoryFilters).forEach(([labelKey, labelValues]) => {
-            if (labelKey === 'Mentoring Topic' || labelKey === 'Field') return; // Skip unwanted filters
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = `Select ${labelCategory}`;
+        filterSelect.appendChild(defaultOption);
 
-            const filterContainer = document.createElement('div');
-            filterContainer.classList.add('label-filter-group');
-            filterContainer.innerHTML = `<label for="${labelKey}">${labelKey}</label>`;
-
-            const selectElement = document.createElement('select');
-            selectElement.id = labelKey;
-            selectElement.classList.add('label-filter');
-            selectElement.addEventListener('change', updateLabels);
-
-            selectElement.insertAdjacentHTML('beforeend', `<option value="">Any</option>`);
-            labelValues.forEach(value => {
-                selectElement.insertAdjacentHTML('beforeend', `<option value="${value}">${value}</option>`);
-            });
-
-            filterContainer.appendChild(selectElement);
-            categoryContainer.appendChild(filterContainer);
+        labelValues.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            filterSelect.appendChild(option);
         });
 
-        labelFiltersContainer.appendChild(categoryContainer);
+        filterContainer.appendChild(filterSelect);
+        labelFiltersContainer.appendChild(filterContainer);
     });
 }
 
-search.addEventListener('input', updateSearch);
-categoryButtons.forEach(button => button.addEventListener('click', updateCategory));
-allOpportunitiesButton.addEventListener('click', () => {
-    currentCategory = '';
-    selectedPostTitle = null;
-    displayPosts();
+categoryButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        currentCategory = button.dataset.category;
+        displayPosts();
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        if (currentCategory === mentorCategory) {
+            createLabelFilters(labels['Mentors']);
+        } else {
+            labelFiltersContainer.innerHTML = '';
+        }
+    });
 });
 
-setupLabelFilters();
+allOpportunitiesButton.addEventListener('click', () => {
+    currentCategory = '';
+    displayPosts();
+    categoryButtons.forEach(btn => btn.classList.remove('active'));
+    allOpportunitiesButton.classList.add('active');
+    labelFiltersContainer.innerHTML = '';
+});
+
+sortBySelect.addEventListener('change', displayPosts);
+search.addEventListener('input', filterPosts);
+
 fetchAllPosts();
+
+// Disable right-click
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// Disable Ctrl+U and F12
+document.addEventListener('keydown', event => {
+    if (event.ctrlKey && event.key === 'u' || event.keyCode === 123) {
+        event.preventDefault();
+    }
+});
