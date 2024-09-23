@@ -1,4 +1,3 @@
-
 const titlesContainer = document.getElementById('titles-container');
 const postContainer = document.getElementById('post-container');
 const search = document.getElementById('search');
