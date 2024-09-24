@@ -93,6 +93,7 @@ body {
   padding: 10px;
   border-radius: 10px;
   box-shadow: none;
+  background-color: var(--white-color); /* Added white background */
 }
 
 .sort-container label {
