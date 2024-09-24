@@ -34,7 +34,7 @@ body {
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 10px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
 }
 
 #search {
@@ -92,7 +92,7 @@ body {
   margin-bottom: 20px;
   padding: 10px;
   border-radius: 10px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
 }
 
 .sort-container label {
@@ -129,7 +129,7 @@ body {
   margin-bottom: 8px;
   cursor: pointer;
   transition: box-shadow 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .post:hover {
@@ -176,7 +176,7 @@ body {
   padding: 15px;
   border-radius: 5px;
   background-color: var(--white-color);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .post-logo, .mentor-img {
@@ -215,7 +215,7 @@ body {
   padding: 15px;
   border-radius: 5px;
   background-color: var(--white-color);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .linkedin-button,
@@ -330,7 +330,7 @@ body {
   background-color: var(--white-color);
   padding: 20px;
   border-radius: 8px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
   margin-bottom: 20px;
 }
 
@@ -372,5 +372,5 @@ body {
 }
 
 :focus {
-    outline: none; /* Remove the default focus outline */
+  outline: none; /* Remove the default focus outline */
 }
