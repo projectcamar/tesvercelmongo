@@ -89,7 +89,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start; /* Align items to the start */
-  margin: 10px 0; /* Adjusted margin for a smaller gap */
+  margin: 5px 0; /* Adjusted margin for a smaller gap */
   padding: 10px;
   border-radius: 10px;
   box-shadow: none;
@@ -378,7 +378,8 @@ body {
 }
 
 #sort-by {
-  padding: 8px; /* Reduced padding for a smaller dropdown */
+  padding: 4px; /* Reduced padding for a smaller dropdown */
+  margin-left: 9px; 
   border: 1px solid #ddd; /* Border color */
   border-radius: 5px; /* Rounded corners */
   background-color: var(--white-color); /* White background */
@@ -389,6 +390,7 @@ body {
   background-repeat: no-repeat; /* Prevent repeating */
   background-position: right 10px center; /* Position the arrow */
   background-size: 10px; /* Size of the arrow */
+  width: 98%
 }
 
 #sort-by:hover {
