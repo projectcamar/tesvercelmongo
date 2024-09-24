@@ -16,8 +16,6 @@ const categories = ['internship', 'competitions', 'scholarships', 'volunteers', 
 const mentorCategory = 'mentors';
 const labels = {
     'Mentors': {
-        'Field': ['Business And Management', 'Engineering, Technology & Data', 'General', 'Product & Design'],
-        'Mentoring Topic': []
     }
 };
 
@@ -268,7 +266,9 @@ function filterPosts() {
 function createLabelFilters(labels) {
     labelFiltersContainer.innerHTML = '';
 
+    // Only create filters for labels that are not "Field" or "Mentoring Topic"
     Object.entries(labels).forEach(([labelCategory, labelValues]) => {
+        // Removed the check for "Field" and "Mentoring Topic"
         const filterContainer = document.createElement('div');
         filterContainer.classList.add('label-filter-container');
 
