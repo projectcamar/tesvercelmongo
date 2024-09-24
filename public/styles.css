@@ -89,11 +89,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin: 10px 0; /* Adjusted margin for a smaller gap */
   padding: 10px;
   border-radius: 10px;
   box-shadow: none;
-  background-color: var(--white-color); /* Added white background */
+  background-color: var(--white-color);
 }
 
 .sort-container label {
@@ -374,4 +374,27 @@ body {
 
 :focus {
   outline: none; /* Remove the default focus outline */
+}
+
+#sort-by {
+  padding: 10px; /* Add padding for better touch targets */
+  border: 1px solid #ddd; /* Border color */
+  border-radius: 5px; /* Rounded corners */
+  background-color: var(--white-color); /* White background */
+  color: var(--text-color); /* Text color */
+  font-size: 14px; /* Font size */
+  appearance: none; /* Remove default dropdown arrow */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><polygon points="0,0 10,0 5,5" fill="%23296ca8"/></svg>'); /* Custom dropdown arrow */
+  background-repeat: no-repeat; /* Prevent repeating */
+  background-position: right 10px center; /* Position the arrow */
+  background-size: 10px; /* Size of the arrow */
+}
+
+#sort-by:hover {
+  border-color: var(--hover-color); /* Change border color on hover */
+}
+
+#sort-by:focus {
+  outline: none; /* Remove default focus outline */
+  border-color: var(--primary-color); /* Change border color on focus */
 }
