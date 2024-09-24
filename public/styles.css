@@ -370,3 +370,7 @@ body {
     margin-top: 20px;
   }
 }
+
+:focus {
+    outline: none; /* Remove the default focus outline */
+}
