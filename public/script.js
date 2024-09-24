@@ -81,6 +81,12 @@ function displayPosts() {
         post.category === currentCategory
     );
 
+    if (sortBySelect.value === 'days-left') {
+        filteredPosts = filteredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    } else {
+        filteredPosts = filteredPosts.sort((a, b) => b.id - a.id);
+    }
+
     const activePosts = filteredPosts.filter(post => !post.expired);
     const expiredPosts = filteredPosts.filter(post => post.expired);
 
@@ -217,6 +223,11 @@ function filterPosts() {
     titlesContainer.innerHTML = '';
     let activePosts = filteredPosts.filter(post => !post.expired);
     let expiredPosts = filteredPosts.filter(post => post.expired);
+
+    if (sortBySelect.value === 'days-left') {
+        activePosts = activePosts.sort((a, b) => a.daysLeft - b.daysLeft);
+        expiredPosts = expiredPosts.sort((a, b) => a.daysLeft - b.daysLeft);
+    }
 
     const sortedFilteredPosts = [...activePosts, ...expiredPosts];
 
