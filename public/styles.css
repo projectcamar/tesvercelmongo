@@ -390,7 +390,8 @@ body {
   background-repeat: no-repeat; /* Prevent repeating */
   background-position: right 10px center; /* Position the arrow */
   background-size: 10px; /* Size of the arrow */
-  width: 98%
+  width: auto;
+  max-width: 200px
 }
 
 #sort-by:hover {
