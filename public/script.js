@@ -304,10 +304,11 @@ categoryButtons.forEach(button => {
         categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
+        // Remove the following block to prevent label filters from being created
         if (currentCategory === mentorCategory) {
-            createLabelFilters(labels['Mentors']);
+            // createLabelFilters(labels['Mentors']); // Comment this line out
         } else {
-            labelFiltersContainer.innerHTML = '';
+            labelFiltersContainer.innerHTML = ''; // This line can stay to clear filters for other categories
         }
     });
 });
