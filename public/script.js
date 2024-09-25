@@ -46,8 +46,6 @@ async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
         const data = await res.json();
-        displayPosts();
-    handleBrokenImages();
 async function fetchAllPosts() {
   try {
     const res = await fetch('/api/all');
@@ -103,17 +101,8 @@ function displayPosts() {
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
-
-        // Get the first letter of the post title for the placeholder
-        const firstLetter = post.title.charAt(0).toUpperCase();
-        const placeholderUrl = `https://placehold.co/80x80/296ca8/ffffff/png?text=${firstLetter}`;
-
         postEl.innerHTML = `
-    postEl.innerHTML = `
-        ${post.category === 'mentors' ? 
-            `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : 
-            `<img src="${post.image}" alt="${post.title}" class="post-logo">`
-        }
+            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
             <div class="post-details">
                 <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
                     ${post.title}
@@ -217,7 +206,6 @@ function displayFullPost(post) {
         </div>
         `}
     `;
-    handleBrokenImages();
 }
 
 function filterPosts() {
@@ -368,14 +356,3 @@ imagePopup.addEventListener('click', (event) => {
         imagePopup.style.display = 'none';
     }
 });
-
-function handleBrokenImages() {
-    document.querySelectorAll('img').forEach(img => {
-        img.onerror = function() {
-            const firstLetter = this.alt.charAt(0).toUpperCase();
-            this.src = `https://placehold.co/80x80/296ca8/ffffff/png?text=${firstLetter}`;
-            this.onerror = null; // Prevents infinite loop if placeholder fails to load
-        };
-    });
-}
-document.addEventListener('DOMContentLoaded', handleBrokenImages);
