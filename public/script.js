@@ -102,7 +102,7 @@ function displayPosts() {
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
         postEl.innerHTML = `
-            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
+            <img src="${post.image}" alt="${post.title}" class="${post.category === 'mentors' ? 'mentor-img' : 'post-logo'}" onerror="this.onerror=null; this.src='placeholder.png';">
             <div class="post-details">
                 <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
                     ${post.title}
@@ -119,13 +119,7 @@ function displayPosts() {
             </div>
             <span class="category">${post.category}</span>
         `;
-        postEl.addEventListener('click', () => {
-            selectedPostTitle = post.title;
-            displayFullPost(post);
-            displayPosts();
-            banner.style.display = 'none';
-        });
-        titlesContainer.appendChild(postEl);
+        // ... existing event listener code ...
     });
 }
 
@@ -140,7 +134,7 @@ function displayFullPost(post) {
 
     postContainer.innerHTML = `
         <div class="post-header">
-            <img src="${post.image || ''}" alt="${post.title}" class="post-logo">
+            <img src="${post.image || ''}" alt="${post.title}" class="post-logo" onerror="this.onerror=null; this.src='placeholder.png';">
             <div class="post-title-company">
                 <h2>${post.title || 'Untitled Post'}</h2>
                 <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
