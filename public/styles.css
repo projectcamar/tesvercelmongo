@@ -187,7 +187,7 @@ body {
 .post-logo, .mentor-img {
   width: 50px;
   height: 50px;
-  border-radius: 50%;
+  border-radius: 0;
   margin-right: 10px;
   object-fit: cover;
 }
