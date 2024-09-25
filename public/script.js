@@ -102,7 +102,7 @@ function displayPosts() {
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
         postEl.innerHTML = `
-            <img src="${post.image}" alt="${post.title}" class="${post.category === 'mentors' ? 'mentor-img' : 'post-logo'}" onerror="this.onerror=null; this.src='placeholder.png';">
+            <img src="${post.image}" alt="${post.title}" class="${post.category === 'mentors' ? 'mentor-img' : 'post-logo'}" onerror="this.onerror=null; this.src='${getPlaceholderUrl(post.title)}';">
             <div class="post-details">
                 <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
                     ${post.title}
@@ -119,9 +119,6 @@ function displayPosts() {
             </div>
             <span class="category">${post.category}</span>
         `;
-        // ... existing event listener code ...
-    });
-}
 
 function displayFullPost(post) {
     const additionalInfo = post.category === 'internship' ? Object.entries(post.labels).map(([key, value]) => {
@@ -134,7 +131,7 @@ function displayFullPost(post) {
 
     postContainer.innerHTML = `
         <div class="post-header">
-            <img src="${post.image || ''}" alt="${post.title}" class="post-logo" onerror="this.onerror=null; this.src='placeholder.png';">
+            <img src="${post.image || ''}" alt="${post.title}" class="post-logo" onerror="this.onerror=null; this.src='${getPlaceholderUrl(post.title)}';">
             <div class="post-title-company">
                 <h2>${post.title || 'Untitled Post'}</h2>
                 <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
@@ -350,3 +347,8 @@ imagePopup.addEventListener('click', (event) => {
         imagePopup.style.display = 'none';
     }
 });
+
+function getPlaceholderUrl(title) {
+    const firstLetter = title.charAt(0).toUpperCase();
+    return `https://api.dicebear.com/6.x/initials/svg?seed=${firstLetter}`;
+}
