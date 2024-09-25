@@ -1,3 +1,4 @@
+
 const titlesContainer = document.getElementById('titles-container');
 const postContainer = document.getElementById('post-container');
 const search = document.getElementById('search');
@@ -6,10 +7,6 @@ const allOpportunitiesButton = document.getElementById('all-opportunities');
 const labelFiltersContainer = document.getElementById('label-filters');
 const banner = document.getElementById('banner');
 const sortBySelect = document.getElementById('sort-by');
-const imagePopup = document.getElementById('image-popup');
-const popupImage = document.getElementById('popup-image');
-const closePopup = document.querySelector('.close-popup');
-
 
 let posts = [];
 let currentCategory = '';
@@ -102,7 +99,7 @@ function displayPosts() {
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
         postEl.innerHTML = `
-            <img src="${post.image}" alt="${post.title}" class="${post.category === 'mentors' ? 'mentor-img' : 'post-logo'}" onerror="this.onerror=null; this.src='${getPlaceholderUrl(post.title)}';">
+            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
             <div class="post-details">
                 <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
                     ${post.title}
@@ -119,6 +116,15 @@ function displayPosts() {
             </div>
             <span class="category">${post.category}</span>
         `;
+        postEl.addEventListener('click', () => {
+            selectedPostTitle = post.title;
+            displayFullPost(post);
+            displayPosts();
+            banner.style.display = 'none';
+        });
+        titlesContainer.appendChild(postEl);
+    });
+}
 
 function displayFullPost(post) {
     const additionalInfo = post.category === 'internship' ? Object.entries(post.labels).map(([key, value]) => {
@@ -131,7 +137,7 @@ function displayFullPost(post) {
 
     postContainer.innerHTML = `
         <div class="post-header">
-            <img src="${post.image || ''}" alt="${post.title}" class="post-logo" onerror="this.onerror=null; this.src='${getPlaceholderUrl(post.title)}';">
+            <img src="${post.image || ''}" alt="${post.title}" class="post-logo">
             <div class="post-title-company">
                 <h2>${post.title || 'Untitled Post'}</h2>
                 <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
@@ -299,11 +305,10 @@ categoryButtons.forEach(button => {
         categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
-        // Remove the following block to prevent label filters from being created
         if (currentCategory === mentorCategory) {
-            // createLabelFilters(labels['Mentors']); // Comment this line out
+
         } else {
-            labelFiltersContainer.innerHTML = ''; // This line can stay to clear filters for other categories
+            labelFiltersContainer.innerHTML = '';
         }
     });
 });
@@ -330,25 +335,3 @@ document.addEventListener('keydown', event => {
         event.preventDefault();
     }
 });
-
-function showPopup(imageSrc) {
-    popupImage.src = imageSrc;
-    imagePopup.style.display = 'flex';
-}
-
-// Close the popup when the 'X' is clicked
-closePopup.addEventListener('click', () => {
-    imagePopup.style.display = 'none';
-});
-
-// Close the popup when clicking outside the image
-imagePopup.addEventListener('click', (event) => {
-    if (event.target === imagePopup) {
-        imagePopup.style.display = 'none';
-    }
-});
-
-function getPlaceholderUrl(title) {
-    const firstLetter = title.charAt(0).toUpperCase();
-    return `https://api.dicebear.com/6.x/initials/svg?seed=${firstLetter}`;
-}
