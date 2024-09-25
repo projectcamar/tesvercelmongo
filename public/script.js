@@ -101,8 +101,16 @@ function displayPosts() {
         postEl.classList.add('post');
         if (post.expired) postEl.classList.add('expired');
         if (selectedPostTitle === post.title) postEl.classList.add('clicked');
+
+        // Get the first letter of the post title for the placeholder
+        const firstLetter = post.title.charAt(0).toUpperCase();
+        const placeholderUrl = `https://placehold.co/80x80/296ca8/ffffff/png?text=${firstLetter}`;
+
         postEl.innerHTML = `
-            ${post.category === 'mentors' ? `<img src="${post.image}" alt="${post.title}" class="mentor-img">` : `<img src="${post.image}" alt="${post.title}" class="post-logo">`}
+            ${post.category === 'mentors' ? 
+                `<img src="${post.image}" alt="${post.title}" class="mentor-img" onerror="this.onerror=null; this.src='${placeholderUrl}';">` : 
+                `<img src="${post.image}" alt="${post.title}" class="post-logo" onerror="this.onerror=null; this.src='${placeholderUrl}';>">`
+            }
             <div class="post-details">
                 <h3 class="post-title ${selectedPostTitle === post.title ? 'clicked' : ''}">
                     ${post.title}
