@@ -6,6 +6,10 @@ const allOpportunitiesButton = document.getElementById('all-opportunities');
 const labelFiltersContainer = document.getElementById('label-filters');
 const banner = document.getElementById('banner');
 const sortBySelect = document.getElementById('sort-by');
+const imagePopup = document.getElementById('image-popup');
+const popupImage = document.getElementById('popup-image');
+const closePopup = document.querySelector('.close-popup');
+
 
 let posts = [];
 let currentCategory = '';
@@ -333,5 +337,22 @@ document.addEventListener('contextmenu', event => event.preventDefault());
 document.addEventListener('keydown', event => {
     if (event.ctrlKey && event.key === 'u' || event.keyCode === 123) {
         event.preventDefault();
+    }
+});
+
+function showPopup(imageSrc) {
+    popupImage.src = imageSrc;
+    imagePopup.style.display = 'flex';
+}
+
+// Close the popup when the 'X' is clicked
+closePopup.addEventListener('click', () => {
+    imagePopup.style.display = 'none';
+});
+
+// Close the popup when clicking outside the image
+imagePopup.addEventListener('click', (event) => {
+    if (event.target === imagePopup) {
+        imagePopup.style.display = 'none';
     }
 });
