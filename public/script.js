@@ -46,6 +46,8 @@ async function fetchAllPosts() {
     try {
         const res = await fetch('/api/all');
         const data = await res.json();
+        displayPosts();
+    handleBrokenImages();
 async function fetchAllPosts() {
   try {
     const res = await fetch('/api/all');
@@ -214,6 +216,7 @@ function displayFullPost(post) {
         </div>
         `}
     `;
+    handleBrokenImages();
 }
 
 function filterPosts() {
@@ -364,3 +367,13 @@ imagePopup.addEventListener('click', (event) => {
         imagePopup.style.display = 'none';
     }
 });
+
+function handleBrokenImages() {
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            const firstLetter = this.alt.charAt(0).toUpperCase();
+            this.src = `https://placehold.co/80x80/296ca8/ffffff/png?text=${firstLetter}`;
+            this.onerror = null; // Prevents infinite loop if placeholder fails to load
+        };
+    });
+}
