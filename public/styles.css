@@ -190,23 +190,23 @@ body {
 }
 
 .post-logo, .mentor-img {
-  width: 40px;
-  height: 40px;
+  width: 80px;  /* Increased from 40px */
+  height: 80px; /* Increased from 40px */
   border-radius: 50%;
-  margin-right: 10px;
+  margin-right: 20px; /* Increased from 10px for better spacing */
   object-fit: cover;
   cursor: pointer;
 }
 
 .post-title-company h2 {
-  font-size: 24px;
+  font-size: 28px; /* Increased from 24px */
   font-weight: 600;
-  margin-bottom: 5px;
+  margin-bottom: 8px; /* Increased from 5px */
   color: var(--text-color);
 }
 
 .company-name {
-  font-size: 16px;
+  font-size: 18px; /* Increased from 16px */
   color: var(--text-color);
   opacity: 0.8;
 }
