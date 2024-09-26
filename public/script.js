@@ -140,7 +140,8 @@ function displayFullPost(post) {
             <img src="${post.image || ''}" alt="${post.title}" class="post-logo">
             <div class="post-title-company">
                 <h2>${post.title || 'Untitled Post'}</h2>
-                <p class="company-name">${post.category === 'mentors' ? (post.labels['Organization'] || 'Organization Name') : (post.labels['Company'] || 'Company Name')}</p>
+                ${post.category === 'mentors' ? `<p class="company-name">${post.labels['Organization'] || 'Organization Name'}</p>` : 
+                 post.category === 'internship' ? `<p class="company-name">${post.labels['Company'] || 'Company Name'}</p>` : ''}
             </div>
         </div>
         <div class="post-actions">
