@@ -190,6 +190,15 @@ body {
 }
 
 .post-logo, .mentor-img {
+  width: 40px;  /* Increased from 40px */
+  height: 40px; /* Increased from 40px */
+  border-radius: 50%;
+  margin-right: 10px; /* Increased from 10px for better spacing */
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.right-section .post-logo, .right-section .mentor-img {
   width: 80px;  /* Increased from 40px */
   height: 80px; /* Increased from 40px */
   border-radius: 50%;
